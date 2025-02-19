@@ -133,7 +133,7 @@ def ldap3_kerberos_login(connection, target, user, password, domain='', lmhash='
         try:
             ccache = CCache.loadFile(os.getenv('KRB5CCNAME'))
             if ccache is None:
-                raise Exception('CCache file is not found. Skipping...')
+                raise Exception('No cache present')
         except Exception as e:
             # No cache present
             logger.warning(e)
