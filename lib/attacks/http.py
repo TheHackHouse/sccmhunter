@@ -20,7 +20,7 @@ import re
 class HTTP:
     
     def __init__(self, username=None, password=None, domain=None, target_dom=None, 
-                    dc_ip=None,ldaps=False, channel_binding=False, kerberos=False, no_pass=False, hashes=None, 
+                    dc_ip=None, port=None, ldaps=False, channel_binding=False, kerberos=False, no_pass=False, hashes=None, 
                     aes=None, debug=False, auto=False, computer_pass=None, computer_hash=None,computer_name=None,
                     uuid=None, mp=None, sp=False, spcn=None, sppid=None, spanon=False,sleep=None, logs_dir=None):
         self.username = username
@@ -28,6 +28,7 @@ class HTTP:
         self.domain = domain
         self.target_dom = target_dom
         self.dc_ip = dc_ip
+        self.port = port
         self.ldaps = ldaps
         self.channel_binding = channel_binding
         self.kerberos = kerberos
@@ -252,7 +253,7 @@ class HTTP:
         try:
             ldap_server, self.ldap_session = init_ldap_session(domain=self.domain, username=self.username, password=self.password,
                                                            lmhash=lmhash, nthash=nthash, kerberos=self.kerberos, domain_controller=self.dc_ip, 
-                                                           aesKey=self.aes, hashes=self.hashes, ldaps=self.ldaps, channel_binding=self.channel_binding)
+                                                           port=self.port, aesKey=self.aes, hashes=self.hashes, ldaps=self.ldaps, channel_binding=self.channel_binding)
             logger.debug(f'[+] Bind successful {ldap_server}')
             try:
                 controls = ldap3.protocol.microsoft.security_descriptor_control(sdflags=0x07)
