@@ -138,29 +138,39 @@ class SMB:
             for i in hostnames:
                 hostname = (i[0])
                 cas_sitecode = False
+
+                failed = False
+
                 #only enumerate if the host is reachable
                 conn = self.smb_connection(hostname)
                 if conn:
                     #see if we can query remote registry for the site database
                     potential_dbs = self.remote_reg_find_db(hostname, conn)
-                    signing, site_code, siteserv, distp, wsus, wdspxe, sccmpxe = self.smb_hunter(hostname, conn)
-                    #check if mssql is self hosted
-                    mssql = self.mssql_check(hostname)
-                    #check for SMS provider roles
-                    provider = self.provider_check(hostname)
-                    #check if fileshares are on 
-                    if siteserv:
-                        status = "Active" 
+                    smb_hunter_result = self.smb_hunter(hostname, conn)
+                    if smb_hunter_result is not None:
+                        signing, site_code, siteserv, distp, wsus, wdspxe, sccmpxe = smb_hunter_result
+                        #check if mssql is self hosted
+                        mssql = self.mssql_check(hostname)
+                        #check for SMS provider roles
+                        provider = self.provider_check(hostname)
+                        #check if fileshares are on 
+                        if siteserv:
+                            status = "Active" 
+                        else:
+                            status = "Passive"
+
+                        for i in cas:
+                            if site_code in i:
+                                cas_sitecode = True
+
+                        cursor.execute(f'''Update SiteServers SET SiteCode=?, CAS=?, SigningStatus=?, SiteServer=?, SMSProvider=?, Config=?, MSSQL=? WHERE Hostname=?''',
+                                    (str(site_code), str(cas_sitecode), str(signing), "True", str(provider), str(status), str(mssql), hostname))
                     else:
-                        status = "Passive"
-
-                    for i in cas:
-                        if site_code in i:
-                            cas_sitecode = True
-
-                    cursor.execute(f'''Update SiteServers SET SiteCode=?, CAS=?, SigningStatus=?, SiteServer=?, SMSProvider=?, Config=?, MSSQL=? WHERE Hostname=?''',
-                                (str(site_code), str(cas_sitecode), str(signing), "True", str(provider), str(status), str(mssql), hostname))
+                        failed = True
                 else:
+                    failed = True
+
+                if failed:
                     cursor.execute(f'''Update SiteServers SET SiteCode=?, CAS=?, SigningStatus=?, SiteServer=?, Config=?, MSSQL=? WHERE Hostname=?''',
                                 ("Connection Failed", "", "", "True", "", "", hostname))
 
