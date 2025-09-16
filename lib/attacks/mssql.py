@@ -122,7 +122,12 @@ class MSSQL:
                 logger.debug(f"[+] Found domain netbiosname: {self.netbiosname}")
         else:
             print("[-] Failed to resolve netbiosname.")
-            return False
+
+            manual_netbiosname = input("[?] Manually enter a netbiosname (leave empty to skip): ")
+            if manual_netbiosname:
+                self.netbiosname = manual_netbiosname
+            else:
+                return False
         
         self.mssql_abuse(self.querysid)
         
